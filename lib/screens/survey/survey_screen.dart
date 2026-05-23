@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../auth/main_shell.dart';
-import 'package:flutter_application_1/services/survey_service.dart';
+import 'package:planther/services/survey_service.dart';
 
 class SurveyScreen extends StatefulWidget {
   const SurveyScreen({super.key});

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/services/ai_service.dart';
+import 'package:planther/services/ai_service.dart';
 import 'plant_detail_screen.dart';
 
 class PlantCardView extends StatefulWidget {

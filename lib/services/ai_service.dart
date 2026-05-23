@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:flutter_application_1/core/constants.dart';
+import 'package:planther/core/constants.dart';
 
 class PlantRecommendation {
   final String plantName;

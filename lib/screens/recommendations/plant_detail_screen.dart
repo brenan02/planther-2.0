@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/services/ai_service.dart';
-import 'package:flutter_application_1/services/perenual_service.dart';
+import 'package:planther/services/ai_service.dart';
+import 'package:planther/services/perenual_service.dart';
 
 class PlantDetailScreen extends StatefulWidget {
   final PlantRecommendation plant;

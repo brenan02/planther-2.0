@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/services/auth_service.dart';
+import 'package:planther/services/auth_service.dart';
 import 'login_screen.dart';
-import 'home_screen.dart'; // add this
+import 'verify_email_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -12,6 +12,9 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen>
     with SingleTickerProviderStateMixin {
+  final _firstNameController = TextEditingController();
+  final _lastNameController = TextEditingController();
+  final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _authService = AuthService();
@@ -23,7 +26,7 @@ class _RegisterScreenState extends State<RegisterScreen>
   late Animation<double> _fadeIn;
   late Animation<Offset> _slideUp;
 
-  // ── password rules ────────────────────────────────
+  // ── password rules ─────────────────────────────────────────────────────
   bool get _hasMinLength => _passwordController.text.length >= 8;
   bool get _hasUppercase =>
       _passwordController.text.contains(RegExp(r'[A-Z]'));
@@ -33,13 +36,22 @@ class _RegisterScreenState extends State<RegisterScreen>
       _passwordController.text.contains(RegExp(r'[0-9]'));
   bool get _hasSpecial =>
       _passwordController.text.contains(RegExp(r'[!@#&]'));
-
   bool get _passwordValid =>
-      _hasMinLength &&
-      _hasUppercase &&
-      _hasLowercase &&
-      _hasNumber &&
-      _hasSpecial;
+      _hasMinLength && _hasUppercase && _hasLowercase &&
+      _hasNumber && _hasSpecial;
+
+  // ── email validation ───────────────────────────────────────────────────
+  bool _isValidEmail(String email) {
+    return RegExp(
+      r'^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$',
+    ).hasMatch(email.trim());
+  }
+
+  // ── username validation ────────────────────────────────────────────────
+  bool _isValidUsername(String username) {
+    // 3-20 chars, letters/numbers/underscores only
+    return RegExp(r'^[a-zA-Z0-9_]{3,20}$').hasMatch(username.trim());
+  }
 
   @override
   void initState() {
@@ -70,6 +82,9 @@ class _RegisterScreenState extends State<RegisterScreen>
 
   @override
   void dispose() {
+    _firstNameController.dispose();
+    _lastNameController.dispose();
+    _usernameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _animController.dispose();
@@ -84,19 +99,40 @@ class _RegisterScreenState extends State<RegisterScreen>
             isError ? Colors.redAccent : const Color(0xFF2D6A4F),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
+            borderRadius: BorderRadius.circular(10)),
       ),
     );
   }
 
   void _handleSignUp() async {
-    if (_emailController.text.trim().isEmpty ||
-        _passwordController.text.trim().isEmpty) {
+    final firstName = _firstNameController.text.trim();
+    final lastName = _lastNameController.text.trim();
+    final username = _usernameController.text.trim();
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    // Empty check
+    if (firstName.isEmpty || lastName.isEmpty || username.isEmpty ||
+        email.isEmpty || password.isEmpty) {
       _showMessage('Please fill in all fields');
       return;
     }
 
+    // Email format check
+    if (!_isValidEmail(email)) {
+      _showMessage(
+          'Please enter a valid email address (e.g. name@example.com)');
+      return;
+    }
+
+    // Username format check
+    if (!_isValidUsername(username)) {
+      _showMessage(
+          'Username must be 3–20 characters, letters, numbers, or underscores only');
+      return;
+    }
+
+    // Password check
     if (!_passwordValid) {
       setState(() => _passwordTouched = true);
       _showMessage('Password does not meet the requirements');
@@ -106,8 +142,11 @@ class _RegisterScreenState extends State<RegisterScreen>
     setState(() => _isLoading = true);
 
     final error = await _authService.signUp(
-      _emailController.text.trim(),
-      _passwordController.text.trim(),
+      email: email,
+      password: password,
+      username: username,
+      firstName: firstName,
+      lastName: lastName,
     );
 
     setState(() => _isLoading = false);
@@ -116,11 +155,18 @@ class _RegisterScreenState extends State<RegisterScreen>
     if (error != null) {
       _showMessage(error);
     } else {
-      _showMessage('Account created! Please log in.', isError: false);
-      await Future.delayed(const Duration(seconds: 1));
+      _showMessage(
+        'Account created! Please check your email to verify, then log in.',
+        isError: false,
+      );
+      await Future.delayed(const Duration(seconds: 2));
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const LoginScreen()),
+        MaterialPageRoute(
+          builder: (_) => VerifyEmailScreen(
+          email: email,
+          ),
+        ),
       );
     }
   }
@@ -141,6 +187,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                 children: [
                   const SizedBox(height: 60),
 
+                  // Back button
                   GestureDetector(
                     onTap: () => Navigator.of(context).pop(),
                     child: Container(
@@ -150,15 +197,10 @@ class _RegisterScreenState extends State<RegisterScreen>
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: const Color(0xFFDDD8D0),
-                          width: 1,
-                        ),
+                            color: const Color(0xFFDDD8D0), width: 1),
                       ),
-                      child: const Icon(
-                        Icons.arrow_back_ios_new,
-                        size: 16,
-                        color: Color(0xFF1A1A1A),
-                      ),
+                      child: const Icon(Icons.arrow_back_ios_new,
+                          size: 16, color: Color(0xFF1A1A1A)),
                     ),
                   ),
 
@@ -183,7 +225,53 @@ class _RegisterScreenState extends State<RegisterScreen>
                     ),
                   ),
 
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 32),
+
+                  // First name + Last name side by side
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _firstNameController,
+                          decoration: const InputDecoration(
+                            labelText: 'First name',
+                          ),
+                          textInputAction: TextInputAction.next,
+                          textCapitalization:
+                              TextCapitalization.words,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: TextField(
+                          controller: _lastNameController,
+                          decoration: const InputDecoration(
+                            labelText: 'Last name',
+                          ),
+                          textInputAction: TextInputAction.next,
+                          textCapitalization:
+                              TextCapitalization.words,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  // Username
+                  TextField(
+                    controller: _usernameController,
+                    decoration: const InputDecoration(
+                      labelText: 'Username',
+                      prefixIcon: Icon(Icons.alternate_email,
+                          color: Color(0xFF8A8578), size: 20),
+                      helperText:
+                          '3–20 characters, letters, numbers, underscores',
+                    ),
+                    textInputAction: TextInputAction.next,
+                  ),
+
+                  const SizedBox(height: 14),
 
                   // Email
                   TextField(
@@ -191,16 +279,13 @@ class _RegisterScreenState extends State<RegisterScreen>
                     keyboardType: TextInputType.emailAddress,
                     decoration: const InputDecoration(
                       labelText: 'Email',
-                      prefixIcon: Icon(
-                        Icons.email_outlined,
-                        color: Color(0xFF8A8578),
-                        size: 20,
-                      ),
+                      prefixIcon: Icon(Icons.email_outlined,
+                          color: Color(0xFF8A8578), size: 20),
                     ),
                     textInputAction: TextInputAction.next,
                   ),
 
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 14),
 
                   // Password
                   TextField(
@@ -208,15 +293,11 @@ class _RegisterScreenState extends State<RegisterScreen>
                     obscureText: _obscurePassword,
                     decoration: InputDecoration(
                       labelText: 'Password',
-                      prefixIcon: const Icon(
-                        Icons.lock_outline,
-                        color: Color(0xFF8A8578),
-                        size: 20,
-                      ),
+                      prefixIcon: const Icon(Icons.lock_outline,
+                          color: Color(0xFF8A8578), size: 20),
                       suffixIcon: GestureDetector(
-                        onTap: () => setState(
-                          () => _obscurePassword = !_obscurePassword,
-                        ),
+                        onTap: () => setState(() =>
+                            _obscurePassword = !_obscurePassword),
                         child: Icon(
                           _obscurePassword
                               ? Icons.visibility_off_outlined
@@ -230,7 +311,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                     onSubmitted: (_) => _handleSignUp(),
                   ),
 
-                  // Rules card — only shows after user starts typing
+                  // Password rules
                   if (_passwordTouched) ...[
                     const SizedBox(height: 14),
                     _buildRulesCard(),
@@ -252,82 +333,6 @@ class _RegisterScreenState extends State<RegisterScreen>
                         : const Text('Create Account'),
                   ),
 
-                  const SizedBox(height: 24),
-
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Divider(
-                          color: Colors.grey.shade300,
-                          thickness: 1,
-                        ),
-                      ),
-                      const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16),
-                        child: Text(
-                          'or sign up with',
-                          style: TextStyle(
-                            color: Color(0xFF8A8578),
-                            fontSize: 13,
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: Divider(
-                          color: Colors.grey.shade300,
-                          thickness: 1,
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // Google button
-                  OutlinedButton(
-                    onPressed: _handleGoogleSignIn,
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size(double.infinity, 56),
-                      side: const BorderSide(color: Color(0xFFDDD8D0)),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      backgroundColor: Colors.white,
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          width: 20,
-                          height: 20,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF4285F4),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: const Center(
-                            child: Text(
-                              'G',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        const Text(
-                          'Continue with Google',
-                          style: TextStyle(
-                            color: Color(0xFF1A1A1A),
-                            fontSize: 15,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
                   const SizedBox(height: 40),
 
                   Center(
@@ -344,8 +349,8 @@ class _RegisterScreenState extends State<RegisterScreen>
                               onTap: () {
                                 Navigator.of(context).pushReplacement(
                                   MaterialPageRoute(
-                                    builder: (_) => const LoginScreen(),
-                                  ),
+                                      builder: (_) =>
+                                          const LoginScreen()),
                                 );
                               },
                               child: const Text(
@@ -438,23 +443,4 @@ class _RegisterScreenState extends State<RegisterScreen>
       ),
     );
   }
-
-  void _handleGoogleSignIn() async {
-    try {
-      await _authService.signInWithGoogle();
-      if (!mounted) return;
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => HomeScreen()),
-      );
-    } catch (e) {
-      _showMessage(e.toString());
-    }
-  }
-}
-
-// Temporary placeholder — replace with your real HomeScreen import
-class HomeScreenPlaceholder extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) =>
-      const Scaffold(body: Center(child: Text('Home')));
 }

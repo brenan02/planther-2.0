@@ -166,8 +166,8 @@ class _LoginScreenState extends State<LoginScreen>
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                     decoration: const InputDecoration(
-                      labelText: 'Email',
-                      prefixIcon: Icon(Icons.email_outlined,
+                      labelText: 'Email or username',
+                      prefixIcon: Icon(Icons.person_outline,
                           color: Color(0xFF8A8578), size: 20),
                     ),
                     textInputAction: TextInputAction.next,

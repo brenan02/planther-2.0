@@ -3,7 +3,7 @@ import 'home_screen.dart';
 import '../inventory/inventory_screen.dart';
 import '../plant_care/plant_care_screen.dart';
 import '../profile/profile_screen.dart';
-import 'package:flutter_application_1/services/ai_service.dart';
+import 'package:planther/services/ai_service.dart';
 
 class MainShell extends StatefulWidget {
   final Map<String, String>? surveyAnswers;

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../survey/survey_screen.dart';
-import 'package:flutter_application_1/services/ai_service.dart';
-import 'package:flutter_application_1/services/survey_service.dart';
+import 'package:planther/services/ai_service.dart';
+import 'package:planther/services/survey_service.dart';
 import '../recommendations/plant_card_view.dart';
 
 class HomeScreen extends StatefulWidget {
