@@ -108,7 +108,7 @@ class _LoadingScreenState extends State<LoadingScreen>
                   ),
                   child: Center(
                     child: Image.asset(
-                      'assets/images/logo.png',
+                      'assets/images/whitevector.png',
                       width: 60,
                       height: 60,
                     ),
