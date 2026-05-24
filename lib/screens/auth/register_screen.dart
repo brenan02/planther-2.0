@@ -118,6 +118,17 @@ class _RegisterScreenState extends State<RegisterScreen>
       return;
     }
 
+    // Name validation — letters only (including spaces and hyphens for compound names)
+    final nameRegex = RegExp(r"^[a-zA-Z\s\-']+$");
+    if (!nameRegex.hasMatch(firstName)) {
+      _showMessage('First name should contain letters only');
+      return;
+    }
+    if (!nameRegex.hasMatch(lastName)) {
+      _showMessage('Last name should contain letters only');
+      return;
+    }
+
     // Email format check
     if (!_isValidEmail(email)) {
       _showMessage(
