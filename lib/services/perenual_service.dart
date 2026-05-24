@@ -38,29 +38,56 @@ class PerenualService {
     return jsonDecode(response.body);
   }
 
-  // Enrich a list of recommendations with Perenual image URLs
-  Future<List<PlantRecommendation>> enrichWithImages(
-    List<PlantRecommendation> recommendations,
-  ) async {
-    final enriched = <PlantRecommendation>[];
+  // Add this method to PerenualService
+Future<String?> getWikipediaImage(String plantName) async {
+  try {
+    final encoded = Uri.encodeComponent(plantName);
+    final uri = Uri.parse(
+      'https://en.wikipedia.org/api/rest_v1/page/summary/$encoded',
+    );
 
-    for (final plant in recommendations) {
-      try {
-        final result = await searchPlant(plant.plantName);
-        enriched.add(PlantRecommendation(
-          plantName: plant.plantName,
-          scientificName: plant.scientificName,
-          reason: plant.reason,
-          careLevel: plant.careLevel,
-          emoji: plant.emoji,
-          imageUrl: result?['imageUrl'],
-          perenualId: result?['id'],
-        ));
-      } catch (_) {
-        enriched.add(plant); // keep without image if search fails
+    final response = await http.get(uri);
+    if (response.statusCode != 200) return null;
+
+    final data = jsonDecode(response.body);
+    return data['thumbnail']?['source'] as String?;
+  } catch (_) {
+    return null;
+  }
+}
+
+// Update enrichWithImages() to use Wikipedia as fallback:
+Future<List<PlantRecommendation>> enrichWithImages(
+  List<PlantRecommendation> recommendations,
+) async {
+  final enriched = <PlantRecommendation>[];
+
+  for (final plant in recommendations) {
+    try {
+      final cleanName = plant.plantName.split('(')[0].trim();
+      final result = await searchPlant(cleanName);
+      String? imageUrl = result?['imageUrl'];
+
+      // If Perenual has no image, try Wikipedia
+      if (imageUrl == null) {
+        imageUrl = await getWikipediaImage(plant.scientificName)
+            ?? await getWikipediaImage(plant.plantName);
       }
-    }
 
-    return enriched;
+      enriched.add(PlantRecommendation(
+        plantName: plant.plantName,
+        scientificName: plant.scientificName,
+        reason: plant.reason,
+        careLevel: plant.careLevel,
+        emoji: plant.emoji,
+        imageUrl: imageUrl,
+        perenualId: result?['id'],
+      ));
+    } catch (_) {
+      enriched.add(plant);
+    }
+  }
+
+  return enriched;
   }
 }

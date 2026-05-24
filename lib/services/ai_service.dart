@@ -144,4 +144,73 @@ Example:
 
     return cleaned.substring(start, end + 1);
   }
+
+  // Get detailed plant info from Groq when Perenual fails
+  Future<Map<String, dynamic>> getPlantDetails({
+    required String plantName,
+    required String scientificName,
+  }) async {
+    const endpoint = 'https://api.groq.com/openai/v1/chat/completions';
+
+    final response = await http.post(
+      Uri.parse(endpoint),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $groqApiKey',
+      },
+      body: jsonEncode({
+        'model': 'llama-3.3-70b-versatile',
+        'messages': [
+          {
+            'role': 'system',
+            'content':
+                'You are a plant expert. Always respond with valid JSON only. No markdown, no explanation.',
+          },
+          {
+            'role': 'user',
+            'content': '''
+  Provide detailed information about the plant "$plantName" (scientific name: $scientificName).
+  Focus on plants found in the Philippines if applicable.
+
+  Return ONLY a JSON object with these exact keys:
+  - plant_type: type of plant (e.g. "Shrub", "Herb", "Tree", "Climber")
+  - height: typical height (e.g. "1 - 3 meters")
+  - spread: typical spread (e.g. "0.5 - 1 meter")
+  - flower: flower description or "None" if no flowers
+  - soil_type: preferred soil (e.g. "Well-drained loamy soil")
+  - light_level: light requirement (e.g. "Full sun", "Indirect light", "Low light")
+  - watering: watering frequency (e.g. "Weekly", "Twice a week", "When soil is dry")
+  - care_tips: 2-3 practical care tips as a single string
+  - is_pet_safe: true or false
+  - is_native_to_philippines: true or false
+  - local_name: local Filipino name if any, or null
+
+  Example:
+  {"plant_type":"Herb","height":"0.3 - 0.6 meters","spread":"0.3 meters","flower":"Small white flowers","soil_type":"Well-drained sandy soil","light_level":"Full sun","watering":"Twice a week","care_tips":"Trim regularly to encourage growth. Avoid overwatering. Plant in a sunny spot.","is_pet_safe":true,"is_native_to_philippines":true,"local_name":"Alagaw"}
+  ''',
+        }
+      ],
+      'temperature': 0.3,
+      'max_tokens': 512,
+    }),
+  );
+
+  if (response.statusCode != 200) {
+    throw Exception('Groq plant details failed: ${response.statusCode}');
+  }
+
+  final data = jsonDecode(response.body);
+  final text = data['choices'][0]['message']['content'] as String;
+
+  final cleaned = text
+      .replaceAll('```json', '')
+      .replaceAll('```', '')
+      .trim();
+
+  final start = cleaned.indexOf('{');
+  final end = cleaned.lastIndexOf('}');
+  if (start == -1 || end == -1) throw Exception('No JSON found');
+
+  return jsonDecode(cleaned.substring(start, end + 1));
+  }
 }

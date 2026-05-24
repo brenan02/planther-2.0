@@ -14,29 +14,65 @@ class PlantDetailScreen extends StatefulWidget {
 class _PlantDetailScreenState extends State<PlantDetailScreen> {
   Map<String, dynamic>? _details;
   bool _isLoading = true;
+  String _dataSource = 'perenual';
 
   @override
-  void initState() {
-    super.initState();
-    if (widget.plant.perenualId != null) {
-      _loadDetails();
-    } else {
-      setState(() => _isLoading = false);
-    }
-  }
+void initState() {
+  super.initState();
+  _loadDetails();
+}
 
   void _loadDetails() async {
-    try {
-      final details = await PerenualService()
+  try {
+    Map<String, dynamic>? perenualData;
+
+    // Try Perenual first if we have an ID
+    if (widget.plant.perenualId != null) {
+      perenualData = await PerenualService()
           .getPlantDetails(widget.plant.perenualId!);
+    }
+
+    // Check if Perenual returned useful data
+    final hasUsefulData = perenualData != null &&
+        (perenualData['watering'] != null ||
+            perenualData['sunlight'] != null);
+
+    if (hasUsefulData) {
       if (mounted) setState(() {
-        _details = details;
+        _details = perenualData;
+        _dataSource = 'perenual';
         _isLoading = false;
+      });
+    } else {
+      // Fallback to Groq
+      final groqData = await AIService().getPlantDetails(
+        plantName: widget.plant.plantName,
+        scientificName: widget.plant.scientificName,
+      );
+      if (mounted) setState(() {
+        _details = groqData;
+        _dataSource = 'groq';
+        _isLoading = false;
+      });
+    }
+  } catch (e) {
+    // Try Groq if Perenual threw an error
+    try {
+      final groqData = await AIService().getPlantDetails(
+        plantName: widget.plant.plantName,
+        scientificName: widget.plant.scientificName,
+      );
+      if (mounted) setState(() {
+        _details = groqData;
+        _dataSource = 'groq';
+        _isLoading = false;
+        
       });
     } catch (_) {
       if (mounted) setState(() => _isLoading = false);
     }
   }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -165,66 +201,8 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
           const SizedBox(height: 28),
 
           if (_details != null) ...[
-            _buildSection('Basic Information', [
-              _buildRow('Plant type',
-                  _extractList(_details!['type']) ?? 'N/A'),
-              _buildRow('Height',
-                  _extractDimension(_details!['dimensions'], 'height')),
-              _buildRow('Spread',
-                  _extractDimension(_details!['dimensions'], 'spread')),
-              _buildRow('Flower',
-                  _extractList(_details!['flowers']) ?? 'None'),
-            ]),
-
-            const SizedBox(height: 24),
-
-            _buildSection('Growing Conditions', [
-              _buildRow('Soil type',
-                  _extractList(_details!['soil']) ?? 'N/A'),
-              _buildRow('Light level',
-                  _extractList(_details!['sunlight']) ?? 'N/A'),
-            ]),
-
-            const SizedBox(height: 24),
-
-            _buildSection('Watering Frequency', [
-              Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Text(
-                  _details!['watering'] ?? 'N/A',
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.75),
-                    fontSize: 15,
-                    height: 1.5,
-                  ),
-                ),
-              ),
-            ]),
-
-            const SizedBox(height: 24),
-
-            _buildSection('Care Tips', [
-              Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Text(
-                  _details!['care-guides'] != null
-                      ? 'See care guides for detailed instructions'
-                      : _details!['description'] ?? 'No tips available',
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.75),
-                    fontSize: 14,
-                    height: 1.6,
-                  ),
-                ),
-              ),
-            ]),
-
-            const SizedBox(height: 24),
-
-            // Pet safety badge
-            _buildPetSafetyBadge(),
+            _buildDetailsFromSource(),
           ] else ...[
-            // No Perenual data — show basic info from AI
             _buildSection('Care Level', [
               _buildRow('Difficulty', plant.careLevel),
             ]),
@@ -234,7 +212,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
               style: TextStyle(
                 color: Colors.white.withOpacity(0.4),
                 fontSize: 13,
-              ),
+            fontStyle: FontStyle.italic,),
             ),
           ],
         ],
@@ -330,6 +308,141 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
       ),
     );
   }
+
+
+  Widget _buildDetailsFromSource() {
+  if (_dataSource == 'groq') {
+    return _buildGroqDetails();
+  }
+  return _buildPerenualDetails();
+}
+
+Widget _buildGroqDetails() {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      _buildSection('Basic Information', [
+        _buildRow('Plant type', _details!['plant_type'] ?? 'N/A'),
+        _buildRow('Height', _details!['height'] ?? 'N/A'),
+        _buildRow('Spread', _details!['spread'] ?? 'N/A'),
+        _buildRow('Flower', _details!['flower'] ?? 'N/A'),
+      ]),
+
+      const SizedBox(height: 24),
+
+      _buildSection('Growing Conditions', [
+        _buildRow('Soil type', _details!['soil_type'] ?? 'N/A'),
+        _buildRow('Light level', _details!['light_level'] ?? 'N/A'),
+      ]),
+
+      const SizedBox(height: 24),
+
+      _buildSection('Watering Frequency', [
+        Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: Text(
+            _details!['watering'] ?? 'N/A',
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.75),
+              fontSize: 15,
+              height: 1.5,
+            ),
+          ),
+        ),
+      ]),
+
+      const SizedBox(height: 24),
+
+      _buildSection('Care Tips', [
+        Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: Text(
+            _details!['care_tips'] ?? 'No tips available',
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.75),
+              fontSize: 14,
+              height: 1.6,
+            ),
+          ),
+        ),
+      ]),
+
+      const SizedBox(height: 24),
+
+      // Filipino origin badge
+      if (_details!['is_native_to_philippines'] == true)
+        Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: const Color(0xFF2D6A4F).withOpacity(0.2),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: const Color(0xFF2D6A4F).withOpacity(0.4),
+            ),
+          ),
+          child: Row(
+            children: [
+              const Text('🇵🇭', style: TextStyle(fontSize: 20)),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  _details!['local_name'] != null
+                      ? 'Native Filipino plant — locally known as "${_details!['local_name']}"'
+                      : 'Native Filipino plant',
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.85),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+      // Pet safety
+      _buildGroqPetSafetyBadge(),
+    ],
+  );
+}
+
+Widget _buildGroqPetSafetyBadge() {
+  final isSafe = _details?['is_pet_safe'] == true;
+  return Container(
+    padding: const EdgeInsets.all(14),
+    decoration: BoxDecoration(
+      color: isSafe
+          ? const Color(0xFF2D6A4F).withOpacity(0.2)
+          : Colors.redAccent.withOpacity(0.15),
+      borderRadius: BorderRadius.circular(14),
+      border: Border.all(
+        color: isSafe
+            ? const Color(0xFF2D6A4F).withOpacity(0.4)
+            : Colors.redAccent.withOpacity(0.3),
+      ),
+    ),
+    child: Row(
+      children: [
+        Text(
+          isSafe ? '🐾' : '⚠️',
+          style: const TextStyle(fontSize: 20),
+        ),
+        const SizedBox(width: 12),
+        Text(
+          isSafe
+              ? 'Pet safe — safe around cats and dogs'
+              : 'Not pet safe — keep away from pets',
+          style: TextStyle(
+            color: Colors.white.withOpacity(0.85),
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    ),
+  );
+}
 
   String? _extractList(dynamic value) {
     if (value == null) return null;
