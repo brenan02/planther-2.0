@@ -86,7 +86,7 @@ class _LoadingScreenState extends State<LoadingScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF2D6A4F),
+      backgroundColor: const Color(0xFF4b986c),
       body: Center(
         child: FadeTransition(
           opacity: _fadeAnimation,
@@ -95,25 +95,11 @@ class _LoadingScreenState extends State<LoadingScreen>
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Container(
-                  width: 96,
-                  height: 96,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(28),
-                    border: Border.all(
-                      color: Colors.white.withOpacity(0.3),
-                      width: 1.5,
-                    ),
-                  ),
-                  child: Center(
-                    child: Image.asset(
-                      'assets/images/whitevector.png',
-                      width: 60,
-                      height: 60,
-                    ),
-                  ),
-                ),
+                Image.asset(
+                'assets/images/logo.png',
+                width: 100,
+                height: 100,
+              ),
                 const SizedBox(height: 24),
                 const Text(
                   'Planther',

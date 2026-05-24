@@ -17,10 +17,10 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
   String _dataSource = 'perenual';
 
   @override
-void initState() {
-  super.initState();
-  _loadDetails();
-}
+    void initState() {
+    super.initState();
+    _loadDetails();
+  }
 
   void _loadDetails() async {
   try {
@@ -128,7 +128,7 @@ void initState() {
                       padding: EdgeInsets.all(60),
                       child: Center(
                         child: CircularProgressIndicator(
-                          color: Color(0xFF2D6A4F),
+                          color: Color(0x4b986c),
                         ),
                       ),
                     )
@@ -174,10 +174,10 @@ void initState() {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: const Color(0xFF2D6A4F).withOpacity(0.2),
+              color: const Color(0x4b986c).withOpacity(0.2),
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
-                color: const Color(0xFF2D6A4F).withOpacity(0.4),
+                color: const Color(0x4b986c).withOpacity(0.4),
               ),
             ),
             child: Row(
@@ -278,12 +278,12 @@ void initState() {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: isSafe
-            ? const Color(0xFF2D6A4F).withOpacity(0.2)
+            ? const Color(0x4b986c).withOpacity(0.2)
             : Colors.redAccent.withOpacity(0.15),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: isSafe
-              ? const Color(0xFF2D6A4F).withOpacity(0.4)
+              ? const Color(0x4b986c).withOpacity(0.4)
               : Colors.redAccent.withOpacity(0.3),
         ),
       ),
@@ -315,6 +315,58 @@ void initState() {
     return _buildGroqDetails();
   }
   return _buildPerenualDetails();
+}
+
+Widget _buildPerenualDetails() {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      _buildSection('Care Level', [
+        _buildRow('Difficulty', widget.plant.careLevel),
+      ]),
+
+      const SizedBox(height: 24),
+
+      _buildSection('Watering', [
+        _buildRow('Frequency', _details!['watering'] ?? 'N/A'),
+        if (_details!['watering_notes'] != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              _details!['watering_notes'],
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.75),
+                fontSize: 15,
+                height: 1.5,
+              ),
+            ),
+          ),
+      ]),
+
+      const SizedBox(height: 24),
+
+      _buildSection('Sunlight', [
+        _buildRow('Light level', _details!['sunlight'] ?? 'N/A'),
+        if (_details!['sunlight_notes'] != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              _details!['sunlight_notes'],
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.75),
+                fontSize: 15,
+                height: 1.5,
+              ),
+            ),
+          ),
+      ]),
+
+      const SizedBox(height: 24),
+
+      // Pet safety
+      _buildPetSafetyBadge(),
+    ],
+  );
 }
 
 Widget _buildGroqDetails() {
@@ -367,82 +419,82 @@ Widget _buildGroqDetails() {
         ),
       ]),
 
-      const SizedBox(height: 24),
+        const SizedBox(height: 24),
 
-      // Filipino origin badge
-      if (_details!['is_native_to_philippines'] == true)
-        Container(
-          margin: const EdgeInsets.only(bottom: 16),
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: const Color(0xFF2D6A4F).withOpacity(0.2),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: const Color(0xFF2D6A4F).withOpacity(0.4),
+        // Filipino origin badge
+        if (_details!['is_native_to_philippines'] == true)
+          Container(
+            margin: const EdgeInsets.only(bottom: 16),
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: const Color(0x4b986c).withOpacity(0.2),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: const Color(0x4b986c).withOpacity(0.4),
+              ),
             ),
-          ),
-          child: Row(
-            children: [
-              const Text('🇵🇭', style: TextStyle(fontSize: 20)),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  _details!['local_name'] != null
-                      ? 'Native Filipino plant — locally known as "${_details!['local_name']}"'
-                      : 'Native Filipino plant',
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.85),
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
+            child: Row(
+              children: [
+                const Text('🇵🇭', style: TextStyle(fontSize: 20)),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    _details!['local_name'] != null
+                        ? 'Native Filipino plant — locally known as "${_details!['local_name']}"'
+                        : 'Native Filipino plant',
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.85),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
 
-      // Pet safety
-      _buildGroqPetSafetyBadge(),
-    ],
-  );
-}
-
-Widget _buildGroqPetSafetyBadge() {
-  final isSafe = _details?['is_pet_safe'] == true;
-  return Container(
-    padding: const EdgeInsets.all(14),
-    decoration: BoxDecoration(
-      color: isSafe
-          ? const Color(0xFF2D6A4F).withOpacity(0.2)
-          : Colors.redAccent.withOpacity(0.15),
-      borderRadius: BorderRadius.circular(14),
-      border: Border.all(
-        color: isSafe
-            ? const Color(0xFF2D6A4F).withOpacity(0.4)
-            : Colors.redAccent.withOpacity(0.3),
-      ),
-    ),
-    child: Row(
-      children: [
-        Text(
-          isSafe ? '🐾' : '⚠️',
-          style: const TextStyle(fontSize: 20),
-        ),
-        const SizedBox(width: 12),
-        Text(
-          isSafe
-              ? 'Pet safe — safe around cats and dogs'
-              : 'Not pet safe — keep away from pets',
-          style: TextStyle(
-            color: Colors.white.withOpacity(0.85),
-            fontSize: 13,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
+        // Pet safety
+        _buildGroqPetSafetyBadge(),
       ],
-    ),
-  );
-}
+    );
+  }
+
+  Widget _buildGroqPetSafetyBadge() {
+    final isSafe = _details?['is_pet_safe'] == true;
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: isSafe
+            ? const Color(0x4b986c).withOpacity(0.2)
+            : Colors.redAccent.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: isSafe
+              ? const Color(0x4b986c).withOpacity(0.4)
+              : Colors.redAccent.withOpacity(0.3),
+       ),
+     ),
+      child: Row(
+        children: [
+          Text(
+            isSafe ? '🐾' : '⚠️',
+            style: const TextStyle(fontSize: 20),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            isSafe
+                ? 'Pet safe — safe around cats and dogs'
+                : 'Not pet safe — keep away from pets',
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.85),
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   String? _extractList(dynamic value) {
     if (value == null) return null;

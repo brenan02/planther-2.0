@@ -117,7 +117,7 @@ class _MainShellState extends State<MainShell> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           color: isActive
-              ? const Color(0xFF2D6A4F).withOpacity(0.1)
+              ? const Color(0x4b986c).withOpacity(0.1)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
         ),
@@ -131,7 +131,7 @@ class _MainShellState extends State<MainShell> {
                 key: ValueKey(isActive),
                 size: 24,
                 color: isActive
-                    ? const Color(0xFF2D6A4F)
+                    ? const Color(0x4b986c)
                     : const Color(0xFF8A8578),
               ),
             ),
@@ -143,7 +143,7 @@ class _MainShellState extends State<MainShell> {
                 fontWeight:
                     isActive ? FontWeight.w600 : FontWeight.normal,
                 color: isActive
-                    ? const Color(0xFF2D6A4F)
+                    ? const Color(0x4b986c)
                     : const Color(0xFF8A8578),
               ),
             ),

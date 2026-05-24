@@ -37,7 +37,7 @@ class PlantCareScreen extends StatelessWidget {
                       width: 96,
                       height: 96,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF2D6A4F).withOpacity(0.08),
+                        color: const Color(0x4b986c).withOpacity(0.08),
                         shape: BoxShape.circle,
                       ),
                       child: const Center(

@@ -72,7 +72,7 @@ class _HomeScreenState extends State<HomeScreen>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Aloe there!',
+                    '👋Aloe po!',
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w700,
@@ -325,7 +325,7 @@ class _HomeScreenState extends State<HomeScreen>
           columnWidths: const {
             0: FlexColumnWidth(2),
             1: FlexColumnWidth(2.5),
-            2: FlexColumnWidth(1.2),
+            2: FlexColumnWidth(1.6),
           },
           children: [
             TableRow(
@@ -350,7 +350,7 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
                 children: [
                   _tableCell(
-                    '${plant.emoji} ${plant.plantName}',
+                    plant.plantName,
                     bold: true,
                   ),
                   _tableCell(plant.reason),

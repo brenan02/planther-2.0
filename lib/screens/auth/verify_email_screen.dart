@@ -18,7 +18,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(msg),
       backgroundColor:
-          isError ? Colors.redAccent : const Color(0xFF2D6A4F),
+          isError ? Colors.redAccent : const Color(0x4b986c),
       behavior: SnackBarBehavior.floating,
       shape:
           RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -109,12 +109,12 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                   width: 80,
                   height: 80,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF2D6A4F).withOpacity(0.1),
+                    color: const Color(0x4b986c).withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
                   child: const Center(
                     child: Icon(Icons.mark_email_unread_outlined,
-                        color: Color(0xFF2D6A4F), size: 38),
+                        color: Color(0x4b986c), size: 38),
                   ),
                 ),
               ),
@@ -189,10 +189,10 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                     'Resend code',
                     style: TextStyle(
                       fontSize: 14,
-                      color: Color(0xFF2D6A4F),
+                      color: Color(0x4b986c),
                       fontWeight: FontWeight.w600,
                       decoration: TextDecoration.underline,
-                      decorationColor: Color(0xFF2D6A4F),
+                      decorationColor: Color(0x4b986c),
                     ),
                   ),
                 ),

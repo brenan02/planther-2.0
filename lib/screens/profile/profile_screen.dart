@@ -58,7 +58,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: _isLoading
             ? const Center(
                 child: CircularProgressIndicator(
-                  color: Color(0xFF2D6A4F),
+                  color: Color(0x4b986c),
                 ),
               )
             : SingleChildScrollView(
@@ -93,7 +93,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             width: 60,
                             height: 60,
                             decoration: const BoxDecoration(
-                              color: Color(0xFF2D6A4F),
+                              color: Color(0x4b986c),
                               shape: BoxShape.circle,
                             ),
                             child: Center(

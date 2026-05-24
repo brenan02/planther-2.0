@@ -76,7 +76,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Please select an answer to continue'),
-          backgroundColor: const Color(0xFF2D6A4F),
+          backgroundColor: const Color(0x4b986c),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
@@ -209,7 +209,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
                       minHeight: 6,
                       backgroundColor: const Color(0xFFE8E4DC),
                       valueColor: const AlwaysStoppedAnimation<Color>(
-                        Color(0xFF2D6A4F),
+                        Color(0x4b986c),
                       ),
                     ),
                   ),
@@ -236,7 +236,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF2D6A4F)
+                            color: const Color(0x4b986c)
                                 .withOpacity(0.1),
                             borderRadius: BorderRadius.circular(20),
                           ),
@@ -245,7 +245,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
                             style: const TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
-                              color: Color(0xFF2D6A4F),
+                              color: Color(0x4b986c),
                             ),
                           ),
                         ),
@@ -284,12 +284,12 @@ class _SurveyScreenState extends State<SurveyScreen> {
                               ),
                               decoration: BoxDecoration(
                                 color: isSelected
-                                    ? const Color(0xFF2D6A4F)
+                                    ? const Color(0x4b986c)
                                     : Colors.white,
                                 borderRadius: BorderRadius.circular(14),
                                 border: Border.all(
                                   color: isSelected
-                                      ? const Color(0xFF2D6A4F)
+                                      ? const Color(0x4b986c)
                                       : const Color(0xFFDDD8D0),
                                   width: isSelected ? 1.5 : 1,
                                 ),

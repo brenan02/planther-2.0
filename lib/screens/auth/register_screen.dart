@@ -96,7 +96,7 @@ class _RegisterScreenState extends State<RegisterScreen>
       SnackBar(
         content: Text(message),
         backgroundColor:
-            isError ? Colors.redAccent : const Color(0xFF2D6A4F),
+            isError ? Colors.redAccent : const Color(0x4b986c),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10)),
@@ -368,10 +368,10 @@ class _RegisterScreenState extends State<RegisterScreen>
                                 'Login',
                                 style: TextStyle(
                                   fontSize: 14,
-                                  color: Color(0xFF2D6A4F),
+                                  color: Color(0x4b986c),
                                   fontWeight: FontWeight.w600,
                                   decoration: TextDecoration.underline,
-                                  decorationColor: Color(0xFF2D6A4F),
+                                  decorationColor: Color(0x4b986c),
                                 ),
                               ),
                             ),
@@ -434,7 +434,7 @@ class _RegisterScreenState extends State<RegisterScreen>
               key: ValueKey(isMet),
               size: 16,
               color: isMet
-                  ? const Color(0xFF2D6A4F)
+                  ? const Color(0x4b986c)
                   : const Color(0xFFE57373),
             ),
           ),
@@ -444,7 +444,7 @@ class _RegisterScreenState extends State<RegisterScreen>
             style: TextStyle(
               fontSize: 12,
               color: isMet
-                  ? const Color(0xFF2D6A4F)
+                  ? const Color(0x4b986c)
                   : const Color(0xFF8A8578),
               fontWeight:
                   isMet ? FontWeight.w500 : FontWeight.normal,
