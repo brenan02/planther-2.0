@@ -99,7 +99,16 @@ class AIService {
 
   String _buildPrompt(Map<String, String> answers) {
     return '''
-Recommend exactly 5 plants for a user with these preferences:
+You are a plant expert specializing in plants found in the Philippines.
+Based on the user survey answers below, recommend exactly 5 plants.
+
+IMPORTANT RULES:
+- Prioritize native Filipino plants and plants commonly found in the Philippines
+- If a native Filipino plant fits the user's needs, always prefer it over exotic alternatives
+- Include the local Filipino name in parentheses after the common name if one exists (e.g. "Snake Plant (Espada)")
+- Only recommend non-Filipino plants if no suitable Filipino plant matches the user's needs
+
+User profile:
 - Experience level: ${answers['experience']}
 - Living environment: ${answers['environment']}
 - Lighting condition: ${answers['lighting']}
@@ -109,14 +118,14 @@ Recommend exactly 5 plants for a user with these preferences:
 - Needs pet-safe plant: ${answers['petSafe']}
 
 Return ONLY a JSON array with exactly 5 objects. Each object must have:
-- plant_name: common name
+- plant_name: common name (with local Filipino name in parentheses if applicable)
 - scientific_name: scientific name
-- reason: one sentence why this suits the user
+- reason: one sentence why this suits the user based on their answers
 - care_level: exactly "Easy", "Moderate", or "Advanced"
 - emoji: one plant emoji
 
 Example:
-[{"plant_name":"Snake Plant","scientific_name":"Sansevieria trifasciata","reason":"Perfect for beginners with low light","care_level":"Easy","emoji":"🌿"}]
+[{"plant_name":"Calamansi (Kalamansi)","scientific_name":"Citrus microcarpa","reason":"A popular Filipino citrus plant perfect for small outdoor spaces","care_level":"Easy","emoji":"🍋"}]
 ''';
   }
 
