@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:planther/services/ai_service.dart';
 import 'package:planther/services/perenual_service.dart';
+import 'package:planther/services/garden_service.dart';
+import 'package:planther/widgets/garden_toast.dart';
 
 class PlantDetailScreen extends StatefulWidget {
   final PlantRecommendation plant;
@@ -147,16 +149,47 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Name + scientific name
-          Text(
-            plant.plantName,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 32,
-              fontWeight: FontWeight.w700,
-              fontFamily: 'Georgia',
-              height: 1.1,
-            ),
-          ),
+          Row(
+  crossAxisAlignment: CrossAxisAlignment.start,
+  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  children: [
+    Expanded(
+      child: Text(
+        plant.plantName,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 32,
+          fontWeight: FontWeight.w700,
+          fontFamily: 'Georgia',
+          height: 1.1,
+        ),
+      ),
+    ),
+    const SizedBox(width: 12),
+    GestureDetector(
+      onTap: () async {
+        try {
+          await GardenService().addPlant(
+            plantName: plant.plantName,
+            scientificName: plant.scientificName,
+            imageUrl: plant.imageUrl,
+            emoji: plant.emoji,
+          );
+          if (context.mounted) showAddedToGardenToast(context);
+        } catch (_) {}
+      },
+      child: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          color: const Color(0xFF2D6A4F),
+          shape: BoxShape.circle,
+        ),
+        child: const Icon(Icons.add, color: Colors.white, size: 22),
+      ),
+    ),
+  ],
+),
           const SizedBox(height: 6),
           Text(
             plant.scientificName,

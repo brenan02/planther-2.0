@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:planther/services/ai_service.dart';
 import 'plant_detail_screen.dart';
+import 'package:planther/services/garden_service.dart';
+import 'package:planther/widgets/garden_toast.dart';
 
 class PlantCardView extends StatefulWidget {
   final List<PlantRecommendation> plants;
@@ -210,6 +212,39 @@ class _PlantCardViewState extends State<PlantCardView> {
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
                 ),
+              ),
+            ),
+          ),
+          
+          Positioned(
+            right: 20,
+            bottom: 28,
+            child: GestureDetector(
+             onTap: () async {
+                try {
+                  await GardenService().addPlant(
+                    plantName: plant.plantName,
+                    scientificName: plant.scientificName,
+                    imageUrl: plant.imageUrl,
+                    emoji: plant.emoji,
+                    );
+                  if (context.mounted) showAddedToGardenToast(context);
+                  } catch (_) {
+                  // fail silently or show error
+                }
+              },
+              child: Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF2D6A4F),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.4),
+                    width: 1,
+                  ),
+                ),
+                child: const Icon(Icons.add, color: Colors.white, size: 24),
               ),
             ),
           ),

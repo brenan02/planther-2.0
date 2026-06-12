@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'home_screen.dart';
-import '../inventory/inventory_screen.dart';
+import '../garden/garden_screen.dart';
 import '../plant_care/plant_care_screen.dart';
 import '../profile/profile_screen.dart';
 import 'package:planther/services/ai_service.dart';
@@ -31,7 +31,7 @@ class _MainShellState extends State<MainShell> {
         surveyAnswers: widget.surveyAnswers,
         recommendations: widget.recommendations,
       ),
-      const InventoryScreen(),
+      const GardenScreen(),
       const PlantCareScreen(),
       const ProfileScreen(),
     ];
@@ -78,9 +78,10 @@ class _MainShellState extends State<MainShell> {
               ),
               _buildNavItem(
                 index: 1,
-                icon: Icons.inventory_2_outlined,
-                activeIcon: Icons.inventory_2_rounded,
-                label: 'Inventory',
+                icon: Icons.local_florist_outlined,
+                activeIcon: Icons.local_florist,
+                label: 'Garden',
+
               ),
               _buildNavItem(
                 index: 2,
