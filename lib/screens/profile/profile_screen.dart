@@ -49,8 +49,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final username = _profile?['username'] ?? '';
     final firstName = _profile?['first_name'] ?? '';
     final lastName = _profile?['last_name'] ?? '';
-    final avatarLetter =
-        username.isNotEmpty ? username[0].toUpperCase() : '?';
+
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F5F0),
@@ -58,7 +57,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: _isLoading
             ? const Center(
                 child: CircularProgressIndicator(
-                  color: Color(0x4b986c),
+                  color: Color(0xFF4b986c),
                 ),
               )
             : SingleChildScrollView(
@@ -79,91 +78,70 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                     // ── Avatar + info card ─────────────────────────────
                     Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                            color: const Color(0xFFEEEAE2)),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 60,
-                            height: 60,
-                            decoration: const BoxDecoration(
-                              color: Color(0x4b986c),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Center(
-                              child: Text(
-                                avatarLetter,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment:
-                                  CrossAxisAlignment.start,
-                              children: [
-                                // Username shown fully
-                                Text(
-                                  username.isNotEmpty
-                                      ? '@$username'
-                                      : '@username',
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w700,
-                                    color: Color(0xFF1A1A1A),
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                // Masked full name
-                                Text(
-                                  (firstName.isNotEmpty ||
-                                          lastName.isNotEmpty)
-                                      ? '${_maskName(firstName)} ${_maskName(lastName)}'
-                                      : '•••••• ••••••',
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    color: Color(0xFF8A8578),
-                                    letterSpacing: 1.2,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+  width: double.infinity,
+  padding: const EdgeInsets.symmetric(
+    horizontal: 18,
+    vertical: 16,
+  ),
+  decoration: BoxDecoration(
+    color: Colors.white,
+    borderRadius: BorderRadius.circular(14),
+    border: Border.all(
+      color: const Color(0xFFEEEAE2),
+    ),
+  ),
+  child: Row(
+    children: [
+      Container(
+        width: 48,
+        height: 48,
+        decoration: const BoxDecoration(
+          color: Color(0xFFE8F3EC),
+          shape: BoxShape.circle,
+        ),
+        child: const Icon(
+          Icons.person_outline,
+          color: Color(0xFF4b986c),
+        ),
+      ),
+      const SizedBox(width: 14),
+      Expanded(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              username.isNotEmpty ? '@$username' : '@username',
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF1A1A1A),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              (firstName.isNotEmpty || lastName.isNotEmpty)
+                  ? '${_maskName(firstName)} ${_maskName(lastName)}'
+                  : '•••••• ••••••',
+              style: const TextStyle(
+                fontSize: 13,
+                color: Color(0xFF8A8578),
+                letterSpacing: 1.2,
+              ),
+            ),
+          ],
+        ),
+      ),
+    ],
+  ),
+),
 
-                    const SizedBox(height: 32),
+                    //const SizedBox(height: 32),
 
-                    _sectionLabel('Account'),
-                    const SizedBox(height: 12),
-                    _buildTile(
-                      icon: Icons.person_outline,
-                      label: 'Edit Profile',
-                      onTap: () {},
-                    ),
-                    _buildTile(
-                      icon: Icons.notifications_outlined,
-                      label: 'Notifications',
-                      onTap: () {},
-                    ),
-                    _buildTile(
-                      icon: Icons.lock_outline,
-                      label: 'Change Password',
-                      onTap: () {},
-                    ),
-
+                    //_sectionLabel('Account'),
+                    //const SizedBox(height: 12),
+              
+                    
+            
                     const SizedBox(height: 32),
 
                     _sectionLabel('About'),
@@ -273,7 +251,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                     Center(
                       child: Text(
-                        'Planther v1.0.0',
+                        'Planther v2.0.0',
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.grey.shade400,

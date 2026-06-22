@@ -130,7 +130,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                       padding: EdgeInsets.all(60),
                       child: Center(
                         child: CircularProgressIndicator(
-                          color: Color(0x4b986c),
+                          color: Color(0xFF4b986c986c),
                         ),
                       ),
                     )
@@ -207,10 +207,10 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: const Color(0x4b986c).withOpacity(0.2),
+              color: const Color(0xFF4b986c986c).withOpacity(0.2),
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
-                color: const Color(0x4b986c).withOpacity(0.4),
+                color: const Color(0xFF4b986c986c).withOpacity(0.4),
               ),
             ),
             child: Row(
@@ -311,12 +311,12 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: isSafe
-            ? const Color(0x4b986c).withOpacity(0.2)
+            ? const Color(0xFF4b986c986c).withOpacity(0.2)
             : Colors.redAccent.withOpacity(0.15),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: isSafe
-              ? const Color(0x4b986c).withOpacity(0.4)
+              ? const Color(0xFF4b986c986c).withOpacity(0.4)
               : Colors.redAccent.withOpacity(0.3),
         ),
       ),
@@ -460,10 +460,10 @@ Widget _buildGroqDetails() {
             margin: const EdgeInsets.only(bottom: 16),
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: const Color(0x4b986c).withOpacity(0.2),
+              color: const Color(0xFF4b986c986c).withOpacity(0.2),
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
-                color: const Color(0x4b986c).withOpacity(0.4),
+                color: const Color(0xFF4b986c986c).withOpacity(0.4),
               ),
             ),
             child: Row(
@@ -498,12 +498,12 @@ Widget _buildGroqDetails() {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: isSafe
-            ? const Color(0x4b986c).withOpacity(0.2)
+            ? const Color(0xFF4b986c986c).withOpacity(0.2)
             : Colors.redAccent.withOpacity(0.15),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: isSafe
-              ? const Color(0x4b986c).withOpacity(0.4)
+              ? const Color(0xFF4b986c986c).withOpacity(0.4)
               : Colors.redAccent.withOpacity(0.3),
        ),
      ),

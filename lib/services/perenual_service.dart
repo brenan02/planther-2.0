@@ -6,108 +6,76 @@ import 'ai_service.dart';
 class PerenualService {
   static const String _base = 'https://perenual.com/api';
 
-  // ── Bad URL patterns Perenual uses for locked/upgrade-required images ──────
-  static bool _isBadImageUrl(String? url) {
+  // Detect Perenual's "upgrade required" placeholder URLs
+  static bool _isBadUrl(String? url) {
     if (url == null || url.isEmpty) return true;
-    // Perenual returns these for free-tier locked content
     if (url.contains('upgrade_access')) return true;
-    if (url.contains('perenual.com/storage/image/upgrade')) return true;
+    if (url.contains('upgrade-plan')) return true;
     if (url.contains('no_image')) return true;
     return false;
   }
 
-  // ── Search Perenual by plant name ──────────────────────────────────────────
-  Future<Map<String, dynamic>?> searchPlant(String plantName) async {
+  Future<Map<String, dynamic>?> searchPlant(String name) async {
     try {
       final uri = Uri.parse(
-        '$_base/species-list?key=$perenualApiKey&q=${Uri.encodeComponent(plantName)}&page=1',
-      );
-      final response =
-          await http.get(uri).timeout(const Duration(seconds: 10));
-      if (response.statusCode != 200) return null;
-
-      final data = jsonDecode(response.body);
-      final results = data['data'] as List?;
-      if (results == null || results.isEmpty) return null;
-
+          '$_base/species-list?key=$perenualApiKey&q=${Uri.encodeComponent(name)}&page=1');
+      final res = await http.get(uri).timeout(const Duration(seconds: 8));
+      if (res.statusCode != 200) return null;
+      final results = (jsonDecode(res.body)['data'] as List?) ?? [];
+      if (results.isEmpty) return null;
       final first = results[0];
-      final rawUrl =
-          first['default_image']?['regular_url'] as String?;
-
-      // Treat bad URLs as null — we'll fall back to Wikipedia
-      final imageUrl = _isBadImageUrl(rawUrl) ? null : rawUrl;
-      final id = first['id'] as int?;
-
-      return {'imageUrl': imageUrl, 'id': id};
+      final url = first['default_image']?['regular_url'] as String?;
+      return {
+        'imageUrl': _isBadUrl(url) ? null : url,
+        'id': first['id'],
+      };
     } catch (_) {
       return null;
     }
   }
 
-  // ── Get full plant details by Perenual ID ──────────────────────────────────
   Future<Map<String, dynamic>?> getPlantDetails(int plantId) async {
     try {
-      final uri = Uri.parse(
-        '$_base/species/details/$plantId?key=$perenualApiKey',
-      );
-      final response =
-          await http.get(uri).timeout(const Duration(seconds: 10));
-      if (response.statusCode != 200) return null;
-      return jsonDecode(response.body);
+      final uri = Uri.parse('$_base/species/details/$plantId?key=$perenualApiKey');
+      final res = await http.get(uri).timeout(const Duration(seconds: 8));
+      if (res.statusCode != 200) return null;
+      return jsonDecode(res.body);
     } catch (_) {
       return null;
     }
   }
 
-  // ── Wikipedia image fetch ──────────────────────────────────────────────────
-  Future<String?> getWikipediaImage(String searchTerm) async {
+  // Wikipedia REST summary thumbnail
+  Future<String?> _wikiSummaryImage(String term) async {
     try {
-      // Clean up the search term — remove Filipino name in parentheses
-      final clean = searchTerm.split('(')[0].trim();
-      final encoded = Uri.encodeComponent(clean);
-
-      final uri = Uri.parse(
-        'https://en.wikipedia.org/api/rest_v1/page/summary/$encoded',
-      );
-      final response =
-          await http.get(uri).timeout(const Duration(seconds: 8));
-      if (response.statusCode != 200) return null;
-
-      final data = jsonDecode(response.body);
-      final url = data['thumbnail']?['source'] as String?;
-
-      // Wikipedia thumbnail is usually small — try to get original size
-      if (url != null) {
-        // Replace /thumb/ path with full image if possible
-        final biggerUrl =
-            url.replaceAll(RegExp(r'/\d+px-'), '/800px-');
-        return biggerUrl;
-      }
-      return null;
+      final clean = term.split('(')[0].trim();
+      final res = await http
+          .get(Uri.parse(
+              'https://en.wikipedia.org/api/rest_v1/page/summary/${Uri.encodeComponent(clean)}'))
+          .timeout(const Duration(seconds: 6));
+      if (res.statusCode != 200) return null;
+      final url = jsonDecode(res.body)['thumbnail']?['source'] as String?;
+      if (url == null) return null;
+      // Upscale the thumbnail
+      return url.replaceAll(RegExp(r'/\d+px-'), '/800px-');
     } catch (_) {
       return null;
     }
   }
 
-  // ── Wikimedia Commons search (better quality than Wikipedia summary) ────────
-  Future<String?> getWikimediaImage(String plantName) async {
+  // Wikimedia API — often higher quality than REST summary
+  Future<String?> _wikimediaImage(String term) async {
     try {
-      final clean = plantName.split('(')[0].trim();
-      final encoded = Uri.encodeComponent(clean);
-
-      final uri = Uri.parse(
-        'https://en.wikipedia.org/w/api.php?action=query&titles=$encoded&prop=pageimages&format=json&pithumbsize=800',
-      );
-      final response =
-          await http.get(uri).timeout(const Duration(seconds: 8));
-      if (response.statusCode != 200) return null;
-
-      final data = jsonDecode(response.body);
-      final pages = data['query']?['pages'] as Map?;
+      final clean = term.split('(')[0].trim();
+      final res = await http
+          .get(Uri.parse(
+              'https://en.wikipedia.org/w/api.php?action=query&titles=${Uri.encodeComponent(clean)}&prop=pageimages&format=json&pithumbsize=800'))
+          .timeout(const Duration(seconds: 6));
+      if (res.statusCode != 200) return null;
+      final pages = jsonDecode(res.body)['query']?['pages'] as Map?;
       if (pages == null) return null;
-
-      for (final page in pages.values) {
-        final url = page['thumbnail']?['source'] as String?;
+      for (final p in pages.values) {
+        final url = p['thumbnail']?['source'] as String?;
         if (url != null) return url;
       }
       return null;
@@ -116,60 +84,84 @@ class PerenualService {
     }
   }
 
-  // ── Enrich recommendations with images ─────────────────────────────────────
-  // Strategy: Perenual first → Wikipedia summary → Wikimedia API → null
+  // iNaturalist — great for Philippine plants and biodiversity photos
+  Future<String?> _iNaturalistImage(String scientificName) async {
+    try {
+      final clean = scientificName.split('(')[0].trim();
+      final res = await http
+          .get(Uri.parse(
+              'https://api.inaturalist.org/v1/taxa?q=${Uri.encodeComponent(clean)}&rank=species&per_page=1'))
+          .timeout(const Duration(seconds: 8));
+      if (res.statusCode != 200) return null;
+      final results = jsonDecode(res.body)['results'] as List?;
+      if (results == null || results.isEmpty) return null;
+      return results[0]['default_photo']?['medium_url'] as String?;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  // ── Main enrichment fallback chain ────────────────────────────────
   Future<List<PlantRecommendation>> enrichWithImages(
-    List<PlantRecommendation> recommendations,
-  ) async {
-    final enriched = <PlantRecommendation>[];
+  List<PlantRecommendation> recommendations,
+) async {
+  final enriched = <PlantRecommendation>[];
 
-    for (final plant in recommendations) {
-      try {
-        // Strip Filipino name from common name for better search results
-        final cleanName = plant.plantName.split('(')[0].trim();
+  for (final plant in recommendations) {
+    final cleanName = plant.plantName.split('(')[0].trim();
+    String? imageUrl;
+    int? perenualId;
 
-        // 1. Try Perenual by common name
-        final perenualResult = await searchPlant(cleanName);
-        String? imageUrl = perenualResult?['imageUrl'];
-        int? perenualId = perenualResult?['id'];
-
-        // 2. If Perenual has no image, try by scientific name
-        if (imageUrl == null && plant.scientificName.isNotEmpty) {
-          final sciResult = await searchPlant(plant.scientificName);
-          imageUrl = sciResult?['imageUrl'];
-          perenualId ??= sciResult?['id'];
-        }
-
-        // 3. Try Wikipedia summary thumbnail
-        if (imageUrl == null) {
-          imageUrl = await getWikipediaImage(plant.scientificName);
-        }
-
-        // 4. Try Wikipedia with common name
-        if (imageUrl == null) {
-          imageUrl = await getWikipediaImage(cleanName);
-        }
-
-        // 5. Try Wikimedia Commons API
-        if (imageUrl == null) {
-          imageUrl = await getWikimediaImage(plant.scientificName);
-        }
-
-        enriched.add(PlantRecommendation(
-          plantName: plant.plantName,
-          scientificName: plant.scientificName,
-          reason: plant.reason,
-          careLevel: plant.careLevel,
-          emoji: plant.emoji,
-          imageUrl: imageUrl,
-          perenualId: perenualId,
-        ));
-      } catch (_) {
-        // Keep the plant without an image rather than dropping it
-        enriched.add(plant);
-      }
+    // 1. Perenual by SCIENTIFIC name first (most accurate)
+    if (plant.scientificName.isNotEmpty) {
+      final p1 = await searchPlant(plant.scientificName);
+      imageUrl = p1?['imageUrl'] as String?;
+      perenualId = p1?['id'] as int?;
     }
 
-    return enriched;
+    // 2. Perenual by common name
+    if (imageUrl == null) {
+      final p2 = await searchPlant(cleanName);
+      imageUrl = p2?['imageUrl'] as String?;
+      perenualId ??= p2?['id'] as int?;
+    }
+
+    // 3. iNaturalist by SCIENTIFIC name
+    if (imageUrl == null) {
+      imageUrl = await _iNaturalistImage(plant.scientificName);
+    }
+
+    // 4. Wikipedia REST by SCIENTIFIC name
+    if (imageUrl == null) {
+      imageUrl = await _wikiSummaryImage(plant.scientificName);
+    }
+
+    // 5. Wikimedia API by SCIENTIFIC name
+    if (imageUrl == null) {
+      imageUrl = await _wikimediaImage(plant.scientificName);
+    }
+
+    // 6. iNaturalist by common name (last resort)
+    if (imageUrl == null) {
+      imageUrl = await _iNaturalistImage(cleanName);
+    }
+
+    // 7. Wikipedia by common name (absolute last resort)
+    if (imageUrl == null) {
+      imageUrl = await _wikiSummaryImage(cleanName);
+    }
+
+    enriched.add(PlantRecommendation(
+      plantName: plant.plantName,
+      scientificName: plant.scientificName,
+      reason: plant.reason,
+      careLevel: plant.careLevel,
+      emoji: plant.emoji,
+      imageUrl: imageUrl,
+      perenualId: perenualId,
+    ));
   }
+
+  return enriched;
+}
 }

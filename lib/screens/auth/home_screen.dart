@@ -24,6 +24,7 @@ class _HomeScreenState extends State<HomeScreen>
   bool _isTableView = false;
   List<PlantRecommendation> _plants = [];
   bool _isLoadingRecommendations = false;
+  bool _isRefreshing = false;
 
   bool get _hasSurveyResults =>
       widget.surveyAnswers != null || _plants.isNotEmpty;
@@ -45,10 +46,35 @@ class _HomeScreenState extends State<HomeScreen>
     try {
       final saved = await SurveyService().loadRecommendations();
       if (mounted) setState(() => _plants = saved);
-    } catch (e) {
+    } catch (_) {
       // silently fail
     } finally {
       if (mounted) setState(() => _isLoadingRecommendations = false);
+    }
+  }
+
+  // ── Refresh without retaking survey ────────────────────────────────────────
+  void _refreshRecommendations() async {
+    setState(() => _isRefreshing = true);
+    try {
+      final fresh = await SurveyService().refreshRecommendations();
+      if (mounted) setState(() => _plants = fresh);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().contains('No survey')
+                ? 'Please take the survey first'
+                : 'Could not refresh. Try again.'),
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isRefreshing = false);
     }
   }
 
@@ -228,7 +254,65 @@ class _HomeScreenState extends State<HomeScreen>
         _buildAnswerSummary(),
         const SizedBox(height: 20),
         _isTableView ? _buildTableView() : _buildScrollView(),
+
+        // ── Refresh button ────────────────────────────────────────────
+        const SizedBox(height: 20),
+        _buildRefreshButton(),
       ],
+    );
+  }
+
+  Widget _buildRefreshButton() {
+    return GestureDetector(
+      onTap: _isRefreshing ? null : _refreshRecommendations,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFF4b986c).withOpacity(0.4)),
+        ),
+        child: _isRefreshing
+            ? const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Color(0xFF4b986c),
+                    ),
+                  ),
+                  SizedBox(width: 12),
+                  Text(
+                    'Getting new suggestions...',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Color(0xFF4b986c),
+                    ),
+                  ),
+                ],
+              )
+            : const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.refresh_rounded,
+                      color: Color(0xFF4b986c), size: 20),
+                  SizedBox(width: 10),
+                  Text(
+                    'Suggest different plants',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF4b986c),
+                    ),
+                  ),
+                ],
+              ),
+      ),
     );
   }
 
@@ -263,10 +347,8 @@ class _HomeScreenState extends State<HomeScreen>
       runSpacing: 6,
       children: widget.surveyAnswers!.entries.map((entry) {
         return Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 10,
-            vertical: 5,
-          ),
+          padding:
+              const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           decoration: BoxDecoration(
             color: const Color(0xFF2D6A4F).withOpacity(0.08),
             borderRadius: BorderRadius.circular(20),
@@ -288,28 +370,29 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Widget _buildScrollView() {
-  if (_plants.isEmpty) {
-    return Center(
-      child: Text(
-        'No recommendations yet.\nTake the survey to get started!',
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          fontSize: 14,
-          color: Colors.grey.shade400,
-          height: 1.5,
+    if (_plants.isEmpty) {
+      return Center(
+        child: Text(
+          'No recommendations yet.\nTake the survey to get started!',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 14,
+            color: Colors.grey.shade400,
+            height: 1.5,
+          ),
         ),
-      ),
-    );
+      );
+    }
+    return PlantCardView(plants: _plants);
   }
-  return PlantCardView(plants: _plants);
-}
 
   Widget _buildTableView() {
     if (_plants.isEmpty) {
       return Center(
         child: Text(
           'No recommendations yet.',
-          style: TextStyle(fontSize: 14, color: Colors.grey.shade400),
+          style:
+              TextStyle(fontSize: 14, color: Colors.grey.shade400),
         ),
       );
     }
@@ -329,9 +412,8 @@ class _HomeScreenState extends State<HomeScreen>
           },
           children: [
             TableRow(
-              decoration: const BoxDecoration(
-                color: Color(0xFF2D6A4F),
-              ),
+              decoration:
+                  const BoxDecoration(color: Color(0xFF2D6A4F)),
               children: [
                 _tableHeader('Plant'),
                 _tableHeader('Why it suits you'),
@@ -341,18 +423,14 @@ class _HomeScreenState extends State<HomeScreen>
             ..._plants.asMap().entries.map((entry) {
               final i = entry.key;
               final plant = entry.value;
-              final isEven = i % 2 == 0;
               return TableRow(
                 decoration: BoxDecoration(
-                  color: isEven
+                  color: i % 2 == 0
                       ? Colors.white
                       : const Color(0xFFF8F5F0),
                 ),
                 children: [
-                  _tableCell(
-                    plant.plantName,
-                    bold: true,
-                  ),
+                  _tableCell(plant.plantName, bold: true),
                   _tableCell(plant.reason),
                   _tableCell(plant.careLevel),
                 ],
@@ -367,29 +445,24 @@ class _HomeScreenState extends State<HomeScreen>
   Widget _tableHeader(String text) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-      child: Text(
-        text,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 12,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
+      child: Text(text,
+          style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.w700)),
     );
   }
 
   Widget _tableCell(String text, {bool bold = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: 12,
-          color: const Color(0xFF1A1A1A),
-          fontWeight: bold ? FontWeight.w600 : FontWeight.normal,
-          height: 1.4,
-        ),
-      ),
+      child: Text(text,
+          style: TextStyle(
+              fontSize: 12,
+              color: const Color(0xFF1A1A1A),
+              fontWeight:
+                  bold ? FontWeight.w600 : FontWeight.normal,
+              height: 1.4)),
     );
   }
 }

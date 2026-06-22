@@ -54,7 +54,7 @@ class _PlantCardViewState extends State<PlantCardView> {
               height: 8,
               decoration: BoxDecoration(
                 color: _currentIndex == i
-                    ? const Color(0x4b986c)
+                    ? const Color(0xFF4b986c986c)
                     : const Color(0xFFDDD8D0),
                 borderRadius: BorderRadius.circular(4),
               ),
@@ -87,7 +87,7 @@ class _PlantCardViewState extends State<PlantCardView> {
                   color: const Color(0xFF1A2E1F),
                   child: const Center(
                     child: CircularProgressIndicator(
-                      color: Color(0x4b986c),
+                      color: Color(0xFF4b986c986c),
                     ),
                   ),
                 );
