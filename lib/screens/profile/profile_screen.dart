@@ -44,6 +44,53 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return '$first$stars$last';
   }
 
+  void _showInfoDialog({
+  required String title,
+  required String content,
+}) {
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      title: Text(
+        title,
+        style: const TextStyle(
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+      content: SizedBox(
+        width: double.maxFinite,
+        height: 400,
+        child: SingleChildScrollView(
+          child: Text(
+            content,
+            style: const TextStyle(
+              fontSize: 14,
+              height: 1.5,
+              color: Color(0xFF5C5850),
+            ),
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text(
+            'Close',
+            style: TextStyle(
+              color: Color(0xFF4b986c),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
   @override
   Widget build(BuildContext context) {
     final username = _profile?['username'] ?? '';
@@ -147,15 +194,89 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     _sectionLabel('About'),
                     const SizedBox(height: 12),
                     _buildTile(
-                      icon: Icons.info_outline,
-                      label: 'About Planther',
-                      onTap: () {},
-                    ),
+  icon: Icons.info_outline,
+  label: 'About Planther',
+  onTap: () {
+    _showInfoDialog(
+      title: 'About Planther',
+      content: '''
+Planther is a mobile application designed to help users discover and care for plants through personalized recommendations and educational resources.
+
+Key Features
+
+• Personalized plant recommendations based on user preferences
+
+• Digital garden management
+
+• AI-assisted plant suggestions
+
+• Personalized care guides
+
+• Plant information database
+
+Planther aims to make plant care more accessible for beginners while still providing useful information for experienced plant enthusiasts.
+
+This is placeholder text. Replace it with your final About Planther content before deployment.
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+''',
+    );
+  },
+),
+
+
                     _buildTile(
-                      icon: Icons.privacy_tip_outlined,
-                      label: 'Privacy Policy',
-                      onTap: () {},
-                    ),
+  icon: Icons.privacy_tip_outlined,
+  label: 'Privacy Policy',
+  onTap: () {
+    _showInfoDialog(
+      title: 'Privacy Policy',
+      content: '''
+Privacy Policy
+
+Planther respects your privacy and is committed to protecting your personal information.
+
+Information We Collect
+
+• Username
+
+• First name
+
+• Last name
+
+• Email address
+
+• Plant collection information
+
+How We Use Information
+
+• To provide plant recommendations
+
+• To save your account data
+
+• To maintain your digital garden
+
+• To improve application functionality
+
+Data Storage
+
+Your information is stored securely using cloud services and authentication systems.
+
+Data Sharing
+
+Planther does not sell personal information to third parties.
+
+User Rights
+
+Users may modify or remove their information according to the application's available account features.
+
+This is placeholder text and should be replaced with your official privacy policy before publication.
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+''',
+    );
+  },
+),
 
                     const SizedBox(height: 32),
 
