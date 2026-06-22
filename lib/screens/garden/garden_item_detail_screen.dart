@@ -1,10 +1,11 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:planther/services/garden_service.dart';
 
 class GardenItemDetailScreen extends StatefulWidget {
   final GardenPlant plant;
-
   const GardenItemDetailScreen({super.key, required this.plant});
 
   @override
@@ -23,6 +24,12 @@ class _GardenItemDetailScreenState extends State<GardenItemDetailScreen> {
   bool _isSavingNotes = false;
   bool _changed = false;
 
+  // ── image state ────────────────────────────────────────────────────────────
+  File? _newImage;           // newly picked image (not yet saved)
+  String? _currentImageUrl;  // current saved image URL
+  bool _removeImage = false; // user wants to remove the image
+  bool _isUploadingImage = false;
+
   @override
   void initState() {
     super.initState();
@@ -30,6 +37,7 @@ class _GardenItemDetailScreenState extends State<GardenItemDetailScreen> {
     _sciNameController =
         TextEditingController(text: widget.plant.scientificName ?? '');
     _notesController = TextEditingController(text: widget.plant.notes ?? '');
+    _currentImageUrl = widget.plant.imageUrl;
   }
 
   @override
@@ -48,13 +56,48 @@ class _GardenItemDetailScreenState extends State<GardenItemDetailScreen> {
             isError ? Colors.redAccent : const Color(0xFF2D6A4F),
         behavior: SnackBarBehavior.floating,
         duration: const Duration(seconds: 2),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );
   }
 
+  // ── pick image from gallery ────────────────────────────────────────────────
+  Future<void> _pickImage() async {
+    final picked = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 80,
+    );
+    if (picked != null) {
+      setState(() {
+        _newImage = File(picked.path);
+        _removeImage = false;
+      });
+    }
+  }
+
+  // ── save everything including image ───────────────────────────────────────
   Future<void> _saveAll() async {
     try {
+      String? imageUrl = _currentImageUrl;
+
+      // Upload new image if picked
+      if (_newImage != null) {
+        setState(() => _isUploadingImage = true);
+        imageUrl = await _gardenService.uploadImage(_newImage!);
+        setState(() {
+          _isUploadingImage = false;
+          _currentImageUrl = imageUrl;
+          _newImage = null;
+        });
+      } else if (_removeImage) {
+        imageUrl = null;
+        setState(() {
+          _currentImageUrl = null;
+          _removeImage = false;
+        });
+      }
+
       await _gardenService.updatePlant(
         id: widget.plant.id,
         plantName: _nameController.text.trim(),
@@ -62,11 +105,14 @@ class _GardenItemDetailScreenState extends State<GardenItemDetailScreen> {
             ? null
             : _sciNameController.text.trim(),
         notes: _notesController.text.trim(),
+        imageUrl: imageUrl,
       );
+
       _changed = true;
       _showMessage('Saved!');
       setState(() => _isEditingName = false);
-    } catch (_) {
+    } catch (e) {
+      setState(() => _isUploadingImage = false);
       _showMessage('Could not save changes.', isError: true);
     }
   }
@@ -81,6 +127,7 @@ class _GardenItemDetailScreenState extends State<GardenItemDetailScreen> {
             ? null
             : _sciNameController.text.trim(),
         notes: _notesController.text.trim(),
+        imageUrl: _currentImageUrl,
       );
       _changed = true;
       _showMessage('Notes saved!');
@@ -96,11 +143,10 @@ class _GardenItemDetailScreenState extends State<GardenItemDetailScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text(
-          'Remove plant',
-          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
-        ),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Remove plant',
+            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18)),
         content: Text(
           'Remove "${widget.plant.plantName}" from your garden?',
           style: const TextStyle(color: Color(0xFF8A8578), fontSize: 14),
@@ -125,11 +171,138 @@ class _GardenItemDetailScreenState extends State<GardenItemDetailScreen> {
       try {
         await _gardenService.deletePlant(widget.plant.id);
         if (!mounted) return;
-        Navigator.of(context).pop(true);
+        Navigator.of(context).pop('deleted');
       } catch (_) {
         _showMessage('Could not remove plant.', isError: true);
       }
     }
+  }
+
+  // ── build the image area ───────────────────────────────────────────────────
+  Widget _buildImageArea() {
+    Widget imageContent;
+
+    if (_newImage != null) {
+      // Show newly picked image (not yet saved)
+      imageContent = Image.file(_newImage!, fit: BoxFit.cover);
+    } else if (!_removeImage && _currentImageUrl != null) {
+      // Show current saved image
+      imageContent = Image.network(
+        _currentImageUrl!,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => _buildEmojiPlaceholder(),
+      );
+    } else {
+      // No image — show emoji placeholder
+      imageContent = _buildEmojiPlaceholder();
+    }
+
+    return Stack(
+      children: [
+        Container(
+          width: double.infinity,
+          height: 220,
+          decoration: BoxDecoration(
+            color: const Color(0xFF2D6A4F).withOpacity(0.08),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          clipBehavior: Clip.hardEdge,
+          child: imageContent,
+        ),
+
+        // Edit mode overlay buttons
+        if (_isEditingName)
+          Positioned(
+            bottom: 12,
+            right: 12,
+            child: Row(
+              children: [
+                // Change / add photo button
+                GestureDetector(
+                  onTap: _pickImage,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.55),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.photo_camera_outlined,
+                            color: Colors.white, size: 16),
+                        const SizedBox(width: 6),
+                        Text(
+                          _currentImageUrl != null || _newImage != null
+                              ? 'Change photo'
+                              : 'Add photo',
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                // Remove photo button — only if there's an image
+                if ((_currentImageUrl != null && !_removeImage) ||
+                    _newImage != null) ...[
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: () => setState(() {
+                      _removeImage = true;
+                      _newImage = null;
+                    }),
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.redAccent.withOpacity(0.8),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.delete_outline,
+                          color: Colors.white, size: 16),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+
+        // Uploading indicator
+        if (_isUploadingImage)
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.4),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Center(
+                child: CircularProgressIndicator(color: Colors.white),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildEmojiPlaceholder() {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(widget.plant.emoji,
+              style: const TextStyle(fontSize: 56)),
+          if (_isEditingName) ...[
+            const SizedBox(height: 8),
+            Text('Tap "Add photo" to add an image',
+                style: TextStyle(
+                    fontSize: 11, color: Colors.grey.shade500)),
+          ],
+        ],
+      ),
+    );
   }
 
   @override
@@ -145,7 +318,7 @@ class _GardenItemDetailScreenState extends State<GardenItemDetailScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ── top bar ──────────────────────────────────────────
+              // ── top bar ────────────────────────────────────────────
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -165,7 +338,6 @@ class _GardenItemDetailScreenState extends State<GardenItemDetailScreen> {
                   ),
                   Row(
                     children: [
-                      // Edit toggle
                       GestureDetector(
                         onTap: () {
                           if (_isEditingName) {
@@ -186,7 +358,9 @@ class _GardenItemDetailScreenState extends State<GardenItemDetailScreen> {
                                 color: const Color(0xFFDDD8D0)),
                           ),
                           child: Icon(
-                            _isEditingName ? Icons.check : Icons.edit_outlined,
+                            _isEditingName
+                                ? Icons.check
+                                : Icons.edit_outlined,
                             size: 18,
                             color: _isEditingName
                                 ? Colors.white
@@ -195,7 +369,6 @@ class _GardenItemDetailScreenState extends State<GardenItemDetailScreen> {
                         ),
                       ),
                       const SizedBox(width: 10),
-                      // Delete
                       GestureDetector(
                         onTap: _confirmDelete,
                         child: Container(
@@ -205,7 +378,8 @@ class _GardenItemDetailScreenState extends State<GardenItemDetailScreen> {
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                                color: Colors.redAccent.withOpacity(0.3)),
+                                color:
+                                    Colors.redAccent.withOpacity(0.3)),
                           ),
                           child: const Icon(Icons.delete_outline,
                               size: 18, color: Colors.redAccent),
@@ -218,33 +392,12 @@ class _GardenItemDetailScreenState extends State<GardenItemDetailScreen> {
 
               const SizedBox(height: 24),
 
-              // ── image ────────────────────────────────────────────
-              Container(
-                width: double.infinity,
-                height: 220,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF2D6A4F).withOpacity(0.08),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                clipBehavior: Clip.hardEdge,
-                child: widget.plant.imageUrl != null
-                    ? Image.network(
-                        widget.plant.imageUrl!,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Center(
-                          child: Text(widget.plant.emoji,
-                              style: const TextStyle(fontSize: 64)),
-                        ),
-                      )
-                    : Center(
-                        child: Text(widget.plant.emoji,
-                            style: const TextStyle(fontSize: 64)),
-                      ),
-              ),
+              // ── image area (now with edit controls) ────────────────
+              _buildImageArea(),
 
               const SizedBox(height: 24),
 
-              // ── name / scientific name ─────────────────────────────
+              // ── name / scientific name ──────────────────────────────
               if (_isEditingName) ...[
                 TextField(
                   controller: _nameController,
@@ -253,7 +406,8 @@ class _GardenItemDetailScreenState extends State<GardenItemDetailScreen> {
                     fontWeight: FontWeight.w700,
                     color: Color(0xFF1A1A1A),
                   ),
-                  decoration: const InputDecoration(labelText: 'Plant name'),
+                  decoration:
+                      const InputDecoration(labelText: 'Plant name'),
                 ),
                 const SizedBox(height: 10),
                 TextField(
@@ -264,8 +418,7 @@ class _GardenItemDetailScreenState extends State<GardenItemDetailScreen> {
                     color: Color(0xFF8A8578),
                   ),
                   decoration: const InputDecoration(
-                    labelText: 'Scientific name (optional)',
-                  ),
+                      labelText: 'Scientific name (optional)'),
                 ),
               ] else ...[
                 Text(
@@ -291,7 +444,7 @@ class _GardenItemDetailScreenState extends State<GardenItemDetailScreen> {
 
               const SizedBox(height: 16),
 
-              // ── date acquired ───────────────────────────────────
+              // ── date acquired ───────────────────────────────────────
               Container(
                 padding: const EdgeInsets.symmetric(
                     horizontal: 14, vertical: 10),
@@ -319,7 +472,7 @@ class _GardenItemDetailScreenState extends State<GardenItemDetailScreen> {
 
               const SizedBox(height: 28),
 
-              // ── notes ─────────────────────────────────────────────
+              // ── notes ───────────────────────────────────────────────
               const Text(
                 'Notes',
                 style: TextStyle(
@@ -338,7 +491,8 @@ class _GardenItemDetailScreenState extends State<GardenItemDetailScreen> {
                   fillColor: Colors.white,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
-                    borderSide: const BorderSide(color: Color(0xFFDDD8D0)),
+                    borderSide:
+                        const BorderSide(color: Color(0xFFDDD8D0)),
                   ),
                 ),
               ),
