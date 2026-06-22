@@ -81,7 +81,6 @@ class _MainShellState extends State<MainShell> {
                 icon: Icons.local_florist_outlined,
                 activeIcon: Icons.local_florist,
                 label: 'Garden',
-
               ),
               _buildNavItem(
                 index: 2,
@@ -110,6 +109,10 @@ class _MainShellState extends State<MainShell> {
   }) {
     final isActive = _currentIndex == index;
 
+    // Fixed: 0xFF4b986c — FF prefix = fully opaque
+    const activeColor = Color(0xFF4b986c);
+    const inactiveColor = Color(0xFF8A8578);
+
     return GestureDetector(
       onTap: () => setState(() => _currentIndex = index),
       behavior: HitTestBehavior.opaque,
@@ -118,23 +121,17 @@ class _MainShellState extends State<MainShell> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           color: isActive
-              ? const Color(0x4b986c).withOpacity(0.1)
+              ? activeColor.withOpacity(0.1)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            AnimatedSwitcher(
-              duration: const Duration(milliseconds: 200),
-              child: Icon(
-                isActive ? activeIcon : icon,
-                key: ValueKey(isActive),
-                size: 24,
-                color: isActive
-                    ? const Color(0x4b986c)
-                    : const Color(0xFF8A8578),
-              ),
+            Icon(
+              isActive ? activeIcon : icon,
+              size: 24,
+              color: isActive ? activeColor : inactiveColor,
             ),
             const SizedBox(height: 4),
             Text(
@@ -143,9 +140,7 @@ class _MainShellState extends State<MainShell> {
                 fontSize: 11,
                 fontWeight:
                     isActive ? FontWeight.w600 : FontWeight.normal,
-                color: isActive
-                    ? const Color(0x4b986c)
-                    : const Color(0xFF8A8578),
+                color: isActive ? activeColor : inactiveColor,
               ),
             ),
           ],

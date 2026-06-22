@@ -26,7 +26,6 @@ class _RegisterScreenState extends State<RegisterScreen>
   late Animation<double> _fadeIn;
   late Animation<Offset> _slideUp;
 
-  // ── password rules ─────────────────────────────────────────────────────
   bool get _hasMinLength => _passwordController.text.length >= 8;
   bool get _hasUppercase =>
       _passwordController.text.contains(RegExp(r'[A-Z]'));
@@ -40,16 +39,13 @@ class _RegisterScreenState extends State<RegisterScreen>
       _hasMinLength && _hasUppercase && _hasLowercase &&
       _hasNumber && _hasSpecial;
 
-  // ── email validation ───────────────────────────────────────────────────
   bool _isValidEmail(String email) {
     return RegExp(
       r'^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$',
     ).hasMatch(email.trim());
   }
 
-  // ── username validation ────────────────────────────────────────────────
   bool _isValidUsername(String username) {
-    // 3-20 chars, letters/numbers/underscores only
     return RegExp(r'^[a-zA-Z0-9_]{3,20}$').hasMatch(username.trim());
   }
 
@@ -96,7 +92,7 @@ class _RegisterScreenState extends State<RegisterScreen>
       SnackBar(
         content: Text(message),
         backgroundColor:
-            isError ? Colors.redAccent : const Color(0x4b986c),
+            isError ? Colors.redAccent : const Color(0xFF4b986c),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10)),
@@ -111,14 +107,12 @@ class _RegisterScreenState extends State<RegisterScreen>
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
 
-    // Empty check
     if (firstName.isEmpty || lastName.isEmpty || username.isEmpty ||
         email.isEmpty || password.isEmpty) {
       _showMessage('Please fill in all fields');
       return;
     }
 
-    // Name validation — letters only (including spaces and hyphens for compound names)
     final nameRegex = RegExp(r"^[a-zA-Z\s\-']+$");
     if (!nameRegex.hasMatch(firstName)) {
       _showMessage('First name should contain letters only');
@@ -129,21 +123,17 @@ class _RegisterScreenState extends State<RegisterScreen>
       return;
     }
 
-    // Email format check
     if (!_isValidEmail(email)) {
-      _showMessage(
-          'Please enter a valid email address (e.g. name@example.com)');
+      _showMessage('Please enter a valid email address (e.g. name@example.com)');
       return;
     }
 
-    // Username format check
     if (!_isValidUsername(username)) {
       _showMessage(
           'Username must be 3–20 characters, letters, numbers, or underscores only');
       return;
     }
 
-    // Password check
     if (!_passwordValid) {
       setState(() => _passwordTouched = true);
       _showMessage('Password does not meet the requirements');
@@ -166,17 +156,9 @@ class _RegisterScreenState extends State<RegisterScreen>
     if (error != null) {
       _showMessage(error);
     } else {
-      _showMessage(
-        'Account created! Please check your email to verify, then log in.',
-        isError: false,
-      );
-      await Future.delayed(const Duration(seconds: 2));
-      if (!mounted) return;
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder: (_) => VerifyEmailScreen(
-          email: email,
-          ),
+          builder: (_) => VerifyEmailScreen(email: email),
         ),
       );
     }
@@ -198,7 +180,6 @@ class _RegisterScreenState extends State<RegisterScreen>
                 children: [
                   const SizedBox(height: 60),
 
-                  // Back button
                   GestureDetector(
                     onTap: () => Navigator.of(context).pop(),
                     child: Container(
@@ -238,7 +219,6 @@ class _RegisterScreenState extends State<RegisterScreen>
 
                   const SizedBox(height: 32),
 
-                  // First name + Last name side by side
                   Row(
                     children: [
                       Expanded(
@@ -248,8 +228,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                             labelText: 'First name',
                           ),
                           textInputAction: TextInputAction.next,
-                          textCapitalization:
-                              TextCapitalization.words,
+                          textCapitalization: TextCapitalization.words,
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -260,8 +239,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                             labelText: 'Last name',
                           ),
                           textInputAction: TextInputAction.next,
-                          textCapitalization:
-                              TextCapitalization.words,
+                          textCapitalization: TextCapitalization.words,
                         ),
                       ),
                     ],
@@ -269,7 +247,6 @@ class _RegisterScreenState extends State<RegisterScreen>
 
                   const SizedBox(height: 14),
 
-                  // Username
                   TextField(
                     controller: _usernameController,
                     decoration: const InputDecoration(
@@ -284,7 +261,6 @@ class _RegisterScreenState extends State<RegisterScreen>
 
                   const SizedBox(height: 14),
 
-                  // Email
                   TextField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
@@ -298,7 +274,6 @@ class _RegisterScreenState extends State<RegisterScreen>
 
                   const SizedBox(height: 14),
 
-                  // Password
                   TextField(
                     controller: _passwordController,
                     obscureText: _obscurePassword,
@@ -307,8 +282,8 @@ class _RegisterScreenState extends State<RegisterScreen>
                       prefixIcon: const Icon(Icons.lock_outline,
                           color: Color(0xFF8A8578), size: 20),
                       suffixIcon: GestureDetector(
-                        onTap: () => setState(() =>
-                            _obscurePassword = !_obscurePassword),
+                        onTap: () => setState(
+                            () => _obscurePassword = !_obscurePassword),
                         child: Icon(
                           _obscurePassword
                               ? Icons.visibility_off_outlined
@@ -322,7 +297,6 @@ class _RegisterScreenState extends State<RegisterScreen>
                     onSubmitted: (_) => _handleSignUp(),
                   ),
 
-                  // Password rules
                   if (_passwordTouched) ...[
                     const SizedBox(height: 14),
                     _buildRulesCard(),
@@ -346,38 +320,37 @@ class _RegisterScreenState extends State<RegisterScreen>
 
                   const SizedBox(height: 40),
 
+                  // ── Login link — fixed using Wrap instead of RichText ──
                   Center(
-                    child: RichText(
-                      text: TextSpan(
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: Color(0xFF8A8578),
+                    child: Wrap(
+                      alignment: WrapAlignment.center,
+                      children: [
+                        const Text(
+                          'Already a user? ',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Color(0xFF8A8578),
+                          ),
                         ),
-                        children: [
-                          const TextSpan(text: 'Already a user? '),
-                          WidgetSpan(
-                            child: GestureDetector(
-                              onTap: () {
-                                Navigator.of(context).pushReplacement(
-                                  MaterialPageRoute(
-                                      builder: (_) =>
-                                          const LoginScreen()),
-                                );
-                              },
-                              child: const Text(
-                                'Login',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Color(0x4b986c),
-                                  fontWeight: FontWeight.w600,
-                                  decoration: TextDecoration.underline,
-                                  decorationColor: Color(0x4b986c),
-                                ),
-                              ),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.of(context).pushReplacement(
+                              MaterialPageRoute(
+                                  builder: (_) => const LoginScreen()),
+                            );
+                          },
+                          child: const Text(
+                            'Login',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Color(0xFF4b986c),
+                              fontWeight: FontWeight.w600,
+                              decoration: TextDecoration.underline,
+                              decorationColor: Color(0xFF4b986c),
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
 
@@ -422,32 +395,30 @@ class _RegisterScreenState extends State<RegisterScreen>
     );
   }
 
+  // ── Fixed: removed AnimatedSwitcher (was causing invisible icons) ─────────
   Widget _buildRule(String label, bool isMet) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
       child: Row(
         children: [
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 200),
-            child: Icon(
-              isMet ? Icons.check_circle : Icons.cancel,
-              key: ValueKey(isMet),
-              size: 16,
-              color: isMet
-                  ? const Color(0x4b986c)
-                  : const Color(0xFFE57373),
-            ),
+          Icon(
+            isMet ? Icons.check_circle : Icons.cancel,
+            size: 16,
+            color: isMet
+                ? const Color(0xFF4b986c)
+                : const Color(0xFFE57373),
           ),
           const SizedBox(width: 8),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              color: isMet
-                  ? const Color(0x4b986c)
-                  : const Color(0xFF8A8578),
-              fontWeight:
-                  isMet ? FontWeight.w500 : FontWeight.normal,
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                color: isMet
+                    ? const Color(0xFF4b986c)
+                    : const Color(0xFF8A8578),
+                fontWeight: isMet ? FontWeight.w500 : FontWeight.normal,
+              ),
             ),
           ),
         ],
